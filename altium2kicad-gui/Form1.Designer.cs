@@ -44,17 +44,20 @@ namespace altium2kicad_gui
             this.fileDp = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.btnClear = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.btnStart = new System.Windows.Forms.Button();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
             this.convLog = new System.Windows.Forms.ListBox();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.workAlert = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
-            this.tabPage2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.tabPage2.SuspendLayout();
             this.SuspendLayout();
             // 
             // fileAp
@@ -70,7 +73,6 @@ namespace altium2kicad_gui
             this.fileAp.Name = "fileAp";
             this.fileAp.Size = new System.Drawing.Size(500, 26);
             this.fileAp.TabIndex = 0;
-            this.fileAp.Text = "C:\\adtools\\altium2kicad";
             this.fileAp.DragDrop += new System.Windows.Forms.DragEventHandler(this.fileAp_DragDrop);
             this.fileAp.DragEnter += new System.Windows.Forms.DragEventHandler(this.fileAp_DragEnter);
             // 
@@ -152,9 +154,9 @@ namespace altium2kicad_gui
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(26, 156);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(160, 40);
+            this.label3.Size = new System.Drawing.Size(397, 40);
             this.label3.TabIndex = 7;
-            this.label3.Text = "\r\n指定 .SCH 原理图文件：";
+            this.label3.Text = "\r\n指定 .SchDoc 原理图文件（Advanced Schematic binary）：";
             // 
             // fileCp
             // 
@@ -224,6 +226,8 @@ namespace altium2kicad_gui
             // tabPage1
             // 
             this.tabPage1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.tabPage1.Controls.Add(this.btnClear);
+            this.tabPage1.Controls.Add(this.label5);
             this.tabPage1.Controls.Add(this.pictureBox1);
             this.tabPage1.Controls.Add(this.btnStart);
             this.tabPage1.Controls.Add(this.label1);
@@ -246,6 +250,54 @@ namespace altium2kicad_gui
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "控制面板";
             // 
+            // btnClear
+            // 
+            this.btnClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnClear.BackColor = System.Drawing.Color.Gray;
+            this.btnClear.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnClear.Location = new System.Drawing.Point(477, 351);
+            this.btnClear.Name = "btnClear";
+            this.btnClear.Size = new System.Drawing.Size(73, 49);
+            this.btnClear.TabIndex = 15;
+            this.btnClear.Text = "清空(&C)";
+            this.btnClear.UseVisualStyleBackColor = false;
+            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+            // 
+            // label5
+            // 
+            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label5.ForeColor = System.Drawing.Color.Silver;
+            this.label5.Location = new System.Drawing.Point(100, 336);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(371, 64);
+            this.label5.TabIndex = 14;
+            this.label5.Text = "如果是较旧版本的 .PCB 和 .SCH 文件，需要先在 Altium Designer 中转换为 .PcbDoc（PCB Binary File）文件和 .Sc" +
+    "hDoc（Advanced Schematic binary）文件。";
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.pictureBox1.Image = global::altium2kicad_gui.Properties.Resources.icon;
+            this.pictureBox1.Location = new System.Drawing.Point(30, 336);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(64, 64);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBox1.TabIndex = 13;
+            this.pictureBox1.TabStop = false;
+            // 
+            // btnStart
+            // 
+            this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnStart.BackColor = System.Drawing.Color.Gray;
+            this.btnStart.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnStart.Location = new System.Drawing.Point(556, 351);
+            this.btnStart.Name = "btnStart";
+            this.btnStart.Size = new System.Drawing.Size(134, 49);
+            this.btnStart.TabIndex = 12;
+            this.btnStart.Text = "开始转换(&S)";
+            this.btnStart.UseVisualStyleBackColor = false;
+            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
+            // 
             // tabPage2
             // 
             this.tabPage2.Controls.Add(this.convLog);
@@ -256,19 +308,6 @@ namespace altium2kicad_gui
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "处理日志";
             this.tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // btnStart
-            // 
-            this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStart.BackColor = System.Drawing.Color.Gray;
-            this.btnStart.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnStart.Location = new System.Drawing.Point(541, 351);
-            this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(149, 49);
-            this.btnStart.TabIndex = 12;
-            this.btnStart.Text = "开始转换(&S)";
-            this.btnStart.UseVisualStyleBackColor = false;
-            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
             // convLog
             // 
@@ -286,33 +325,35 @@ namespace altium2kicad_gui
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             // 
-            // pictureBox1
+            // workAlert
             // 
-            this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.pictureBox1.Image = global::altium2kicad_gui.Properties.Resources.icon;
-            this.pictureBox1.Location = new System.Drawing.Point(30, 336);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(64, 64);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox1.TabIndex = 13;
-            this.pictureBox1.TabStop = false;
+            this.workAlert.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.workAlert.ForeColor = System.Drawing.Color.Red;
+            this.workAlert.Location = new System.Drawing.Point(634, 4);
+            this.workAlert.Name = "workAlert";
+            this.workAlert.Size = new System.Drawing.Size(90, 22);
+            this.workAlert.TabIndex = 13;
+            this.workAlert.Text = "工作中";
+            this.workAlert.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.workAlert.Visible = false;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(731, 462);
+            this.Controls.Add(this.workAlert);
             this.Controls.Add(this.tabControl1);
             this.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "Form1";
-            this.Text = "Altium Designer 到 KiCad 转换器";
+            this.Text = "altium2kicad-gui - Altium Designer 到 KiCad 转换器";
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
-            this.tabPage2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            this.tabPage2.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -340,6 +381,9 @@ namespace altium2kicad_gui
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label workAlert;
+        private System.Windows.Forms.Button btnClear;
     }
 }
 

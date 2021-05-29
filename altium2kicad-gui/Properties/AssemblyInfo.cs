@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("altium2kicad-gui")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Altium Designer 到 KiCad 转换器")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("KagurazakaYashi")]
 [assembly: AssemblyProduct("altium2kicad-gui")]
-[assembly: AssemblyCopyright("Copyright ©  2021 KAgurazakaYashi")]
+[assembly: AssemblyCopyright("Copyright ©  2021 KagurazakaYashi")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
