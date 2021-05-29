@@ -15,10 +15,31 @@ namespace altium2kicad_gui
 {
     public partial class Form1 : Form
     {
+        private string perl = "";
         public Form1()
         {
             InitializeComponent();
             fileAp.Text = Directory.GetCurrentDirectory() + "\\altium2kicad";
+            Process p = new Process();
+            p.StartInfo.FileName = "where";
+            p.StartInfo.Arguments = "perl";
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardInput = true;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.RedirectStandardError = true;
+            p.StartInfo.CreateNoWindow = true;
+            p.Start();
+            perl = p.StandardOutput.ReadToEnd();
+            p.WaitForExit();
+            p.Close();
+            perl = perl.Split('\n')[0];
+            if (perl.Length < 5)
+            {
+                logAdd("错误： 找不到 Perl 运行时。");
+                logAdd("请先安装 Perl ，然后退出并重新运行本软件。");
+                return;
+            }
+            logAdd("Perl 运行时路径：" + perl);
         }
 
         private void fileAb_Click(object sender, EventArgs e)
@@ -155,103 +176,113 @@ namespace altium2kicad_gui
 
         private void start()
         {
-            convLog.Items.Clear();
-            tabControl1.SelectTab(1);
+            tabControl1.SelectTab(2);
             logAdd("正在准备开始...");
-            Process p = new Process();
-            p.StartInfo.FileName = "where";
-            p.StartInfo.Arguments = "perl";
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardInput = true;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.CreateNoWindow = true;
-            p.Start();
-            string perl = p.StandardOutput.ReadToEnd();
-            p.WaitForExit();
-            p.Close();
-            perl = perl.Split('\n')[0];
-            if (perl.Length < 5)
+            if (perl.Length == 0)
             {
-                logAdd("错误： 找不到 Perl 运行时。");
                 return;
             }
-            logAdd("Perl 运行时路径：" + perl);
+            if (fileAp.Text.Length == 0)
+            {
+                logAdd("错误： 必须指定 altium2kicad 的文件夹路径。");
+                return;
+            }
+            if (fileBp.Text.Length == 0 && fileCp.Text.Length == 0)
+            {
+                logAdd("错误： .PcbDoc 和 .SchDoc 至少要有一个。");
+                return;
+            }
 
             TextBox[] textBoxes = { fileAp, fileBp, fileCp, fileDp };
             bool[] isDir = { true, false, false, true };
             bool isErr = false;
             bool newDir = false;
+
             for (int i = 0; i < textBoxes.Length; i++)
             {
                 TextBox textBox = textBoxes[i];
                 string text = textBox.Text;
-                if (text.Length == 0)
+                if (text.Length > 0)
                 {
-                    logAdd("错误：请填写所有的路径框。");
-                    return;
-                }
-                if (isDir[i] == true && !Directory.Exists(text) || isDir[i] == false && !File.Exists(text))
-                {
-                    if (i == textBoxes.Length - 1)
+                    if (isDir[i] == true && !Directory.Exists(text) || isDir[i] == false && !File.Exists(text))
                     {
-                        newDir = true;
-                    }
-                    else
-                    {
-                        isErr = true;
-                        logAdd("错误：找不到文件或文件夹 " + text + " 。");
+                        if (i == textBoxes.Length - 1)
+                        {
+                            newDir = true;
+                        }
+                        else
+                        {
+                            isErr = true;
+                            logAdd("错误：找不到文件或文件夹 " + text + " 。");
+                        }
                     }
                 }
             }
-            string[] fileNameArr = fileBp.Text.Split('.');
-            if (fileNameArr[fileNameArr.Length - 1] != "PcbDoc")
+            if (fileBp.Text.Length > 0)
             {
-                isErr = true;
-                logAdd("错误：电路板文件必须是 .PcbDoc 文件，格式为 PCB Binary File 。");
+                string[] fileNameArr = fileBp.Text.Split('.');
+                if (fileNameArr[fileNameArr.Length - 1] != "PcbDoc")
+                {
+                    isErr = true;
+                    logAdd("错误：电路板文件必须是 .PcbDoc 文件，格式为 PCB Binary File 。");
+                }
             }
-            fileNameArr = fileCp.Text.Split('.');
-            if (fileNameArr[fileNameArr.Length - 1] != "SchDoc")
+            if (fileCp.Text.Length > 0)
             {
-                isErr = true;
-                logAdd("错误：原理图文件必须是 .SchDoc 文件，格式为 Advanced Schematic binary 。");
+                string[] fileNameArr = fileCp.Text.Split('.');
+                if (fileNameArr[fileNameArr.Length - 1] != "SchDoc")
+                {
+                    isErr = true;
+                    logAdd("错误：原理图文件必须是 .SchDoc 文件，格式为 Advanced Schematic binary 。");
+                }
             }
             if (isErr)
             {
                 return;
             }
-            logAdd("复制临时文件...");
-            string[] fileBpArr = getFileName(fileBp.Text);
-            string[] fileCpArr = getFileName(fileCp.Text);
-            string fromFile1 = fileBp.Text;
-            string toFile1 = fileAp.Text + "\\" + fileBpArr[1] + "." + fileBpArr[2];
-            logAdd("复制临时文件 " + fromFile1 + " → " + toFile1 + " ...");
-            try
+
+            string toFile1 = "";
+            string toFile2 = "";
+            string[] fileNpArr = { };
+
+            if (fileBp.Text.Length > 0)
             {
-                File.Copy(fromFile1, toFile1, true);
+                string[] fileBpArr = getFileName(fileBp.Text);
+                string fromFile1 = fileBp.Text;
+                toFile1 = fileAp.Text + "\\" + fileBpArr[1] + "." + fileBpArr[2];
+                logAdd("复制临时文件 " + fromFile1 + " → " + toFile1 + " ...");
+                try
+                {
+                    File.Copy(fromFile1, toFile1, true);
+                }
+                catch (Exception err)
+                {
+                    logAdd("错误： " + err.Message);
+                    return;
+                }
+                fileNpArr = fileBpArr;
             }
-            catch (Exception err)
+            if (fileCp.Text.Length > 0)
             {
-                logAdd("错误： " + err.Message);
-                return;
-            }
-            string fromFile2 = fileCp.Text;
-            string toFile2 = fileAp.Text + "\\" + fileCpArr[1] + "." + fileCpArr[2];
-            logAdd("复制临时文件 " + fromFile2 + " → " + toFile2 + " ...");
-            try
-            {
-                File.Copy(fromFile2, toFile2, true);
-            }
-            catch (Exception err)
-            {
-                logAdd("错误： " + err.Message);
-                return;
+                string[] fileCpArr = getFileName(fileCp.Text);
+                string fromFile2 = fileCp.Text;
+                toFile2 = fileAp.Text + "\\" + fileCpArr[1] + "." + fileCpArr[2];
+                logAdd("复制临时文件 " + fromFile2 + " → " + toFile2 + " ...");
+                try
+                {
+                    File.Copy(fromFile2, toFile2, true);
+                }
+                catch (Exception err)
+                {
+                    logAdd("错误： " + err.Message);
+                    return;
+                }
+                fileNpArr = fileCpArr;
             }
             string[] strOuput = { };
-
             Thread.Sleep(1000);
             logAdd("解压封包...");
-            p = new Process();
+            Process p = new Process();
             p.StartInfo.FileName = perl;
             p.StartInfo.Arguments = "unpack.pl";
             p.StartInfo.WorkingDirectory = fileAp.Text;
@@ -269,53 +300,62 @@ namespace altium2kicad_gui
                 logAdd(strOuput[i]);
             }
             logAdd("解压封包结束。");
-
             Thread.Sleep(1000);
-            logAdd("转换原理图...");
-            p = new Process();
-            p.StartInfo.FileName = perl;
-            p.StartInfo.Arguments = "convertschema.pl";
-            p.StartInfo.WorkingDirectory = fileAp.Text;
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardInput = true;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.CreateNoWindow = true;
-            p.Start();
-            strOuput = p.StandardOutput.ReadToEnd().Split('\n');
-            p.WaitForExit();
-            p.Close();
-            for (int i = 0; i < strOuput.Length; i++)
-            {
-                logAdd(strOuput[i]);
-            }
-            logAdd("转换原理图结束。");
 
-            Thread.Sleep(1000);
-            logAdd("转换 PCB ...");
-            p = new Process();
-            p.StartInfo.FileName = perl;
-            p.StartInfo.Arguments = "convertpcb.pl";
-            p.StartInfo.WorkingDirectory = fileAp.Text;
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardInput = true;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.RedirectStandardError = true;
-            p.StartInfo.CreateNoWindow = true;
-            p.Start();
-            strOuput = p.StandardOutput.ReadToEnd().Split('\n');
-            p.WaitForExit();
-            p.Close();
-            for (int i = 0; i < strOuput.Length; i++)
+            if (fileCp.Text.Length > 0)
             {
-                logAdd(strOuput[i]);
+                logAdd("转换原理图...");
+                p = new Process();
+                p.StartInfo.FileName = perl;
+                p.StartInfo.Arguments = "convertschema.pl";
+                p.StartInfo.WorkingDirectory = fileAp.Text;
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.RedirectStandardInput = true;
+                p.StartInfo.RedirectStandardOutput = true;
+                p.StartInfo.RedirectStandardError = true;
+                p.StartInfo.CreateNoWindow = true;
+                p.Start();
+                strOuput = p.StandardOutput.ReadToEnd().Split('\n');
+                p.WaitForExit();
+                p.Close();
+                for (int i = 0; i < strOuput.Length; i++)
+                {
+                    logAdd(strOuput[i]);
+                }
+                logAdd("转换原理图结束。");
+                Thread.Sleep(1000);
             }
-            logAdd("转换 PCB 结束。");
+            if (fileBp.Text.Length > 0)
+            {
+                logAdd("转换 PCB ...");
+                p = new Process();
+                p.StartInfo.FileName = perl;
+                p.StartInfo.Arguments = "convertpcb.pl";
+                p.StartInfo.WorkingDirectory = fileAp.Text;
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.RedirectStandardInput = true;
+                p.StartInfo.RedirectStandardOutput = true;
+                p.StartInfo.RedirectStandardError = true;
+                p.StartInfo.CreateNoWindow = true;
+                p.Start();
+                strOuput = p.StandardOutput.ReadToEnd().Split('\n');
+                p.WaitForExit();
+                p.Close();
+                for (int i = 0; i < strOuput.Length; i++)
+                {
+                    logAdd(strOuput[i]);
+                }
+                logAdd("转换 PCB 结束。");
+            }
 
             Thread.Sleep(2000);
             string[] tmpFileName = { toFile1, toFile2, fileAp.Text + "\\Pads.html", fileAp.Text + "\\Pads.txt", fileAp.Text + "\\wrlshapes.kicad_pcb" };
             for (int i = 0; i < tmpFileName.Length; i++)
             {
+                if (tmpFileName[i].Length == 0)
+                {
+                    continue;
+                }
                 try
                 {
                     logAdd("删除临时文件 " + tmpFileName[i] + " ...");
@@ -331,7 +371,7 @@ namespace altium2kicad_gui
             {
                 try
                 {
-                    string tdir = fileAp.Text + "\\" + fileBpArr[1] + tmpDirName[i];
+                    string tdir = fileAp.Text + "\\" + fileNpArr[1] + tmpDirName[i];
                     logAdd("删除临时文件夹 " + tdir + " ...");
                     DeleteDirectory(tdir);
                 }
@@ -341,7 +381,7 @@ namespace altium2kicad_gui
                 }
             }
 
-            string[] files = Directory.GetFiles(fileAp.Text, fileBpArr[1] + "*");
+            string[] files = Directory.GetFiles(fileAp.Text, fileNpArr[1] + "*");
             if (newDir)
             {
                 logAdd("正在创建目标文件夹 " + fileDp.Text + " ...");
@@ -369,6 +409,7 @@ namespace altium2kicad_gui
 
         private void btnStart_Click(object sender, EventArgs e)
         {
+            convLog.Items.Clear();
             workAlert.Visible = true;
             UseWaitCursor = true;
             start();
