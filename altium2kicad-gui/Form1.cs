@@ -100,8 +100,16 @@ namespace altium2kicad_gui
             string[] pathArr = filePath.Split('\\');
             string fileFullName = pathArr[pathArr.Length - 1];
             string[] fileNameArr = fileFullName.Split('.');
-            string filename = fileNameArr[0];
-            string extname = fileNameArr[1];
+            string filename = "";
+            for (int i = 0; i < fileNameArr.Length - 1; i++)
+            {
+                if (i > 0)
+                {
+                    filename += ".";
+                }
+                filename += fileNameArr[i];
+            }
+            string extname = fileNameArr[fileNameArr.Length - 1];
             string path = "";
             for (int i = 0; i < pathArr.Length - 1; i++)
             {
@@ -176,7 +184,6 @@ namespace altium2kicad_gui
 
         private void start()
         {
-            tabControl1.SelectTab(2);
             logAdd("正在准备开始...");
             if (perl.Length == 0)
             {
@@ -346,9 +353,9 @@ namespace altium2kicad_gui
                     logAdd(strOuput[i]);
                 }
                 logAdd("转换 PCB 结束。");
+                Thread.Sleep(1000);
             }
 
-            Thread.Sleep(2000);
             string[] tmpFileName = { toFile1, toFile2, fileAp.Text + "\\Pads.html", fileAp.Text + "\\Pads.txt", fileAp.Text + "\\wrlshapes.kicad_pcb" };
             for (int i = 0; i < tmpFileName.Length; i++)
             {
@@ -380,7 +387,7 @@ namespace altium2kicad_gui
                     logAdd("警告： " + err.Message);
                 }
             }
-
+            logAdd(fileAp.Text + " | " + fileNpArr[1] + "*");
             string[] files = Directory.GetFiles(fileAp.Text, fileNpArr[1] + "*");
             if (newDir)
             {
@@ -404,12 +411,20 @@ namespace altium2kicad_gui
                     logAdd("错误： " + err.Message);
                 }
             }
+            if (progressBar1.Value + 1 <= progressBar1.Maximum)
+            {
+                progressBar1.Value++;
+            }
+            Thread.Sleep(1000);
             logAdd("运行结束。");
         }
 
         private void btnStart_Click(object sender, EventArgs e)
         {
+            progressBar1.Value = 0;
+            progressBar1.Maximum = 1;
             convLog.Items.Clear();
+            tabControl1.SelectTab(2);
             workAlert.Visible = true;
             UseWaitCursor = true;
             start();
@@ -423,6 +438,87 @@ namespace altium2kicad_gui
             fileCp.Text = "";
             fileDp.Text = "";
             convLog.Items.Clear();
+            fileEp.Text = "";
+            previewList.Items.Clear();
+        }
+
+        private void fileEp_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = (e.Data.GetDataPresent(DataFormats.FileDrop)) ? DragDropEffects.Link : DragDropEffects.None;
+        }
+
+        private void fileEp_DragDrop(object sender, DragEventArgs e)
+        {
+            ((TextBox)sender).Text = ((Array)e.Data.GetData(DataFormats.FileDrop)).GetValue(0).ToString();
+            batchList();
+        }
+
+        private void batchBtn_Click(object sender, EventArgs e)
+        {
+            folderBrowserDialog1.SelectedPath = fileEp.Text;
+            if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
+            {
+                fileEp.Text = folderBrowserDialog1.SelectedPath;
+            }
+            batchList();
+        }
+
+        private void Director(string dir, List<string> list)
+        {
+            DirectoryInfo d = new DirectoryInfo(dir);
+            FileInfo[] files = d.GetFiles();
+            DirectoryInfo[] directs = d.GetDirectories();
+            foreach (FileInfo f in files)
+            {
+                list.Add(f.FullName);
+            }
+            foreach (DirectoryInfo dd in directs)
+            {
+                Director(dd.FullName, list);
+            }
+        }
+
+        private void batchList()
+        {
+            List<string> nameList = new List<string> { };
+            Director(fileEp.Text, nameList);
+            foreach (string fileName in nameList)
+            {
+                string[] fileNameArr = fileName.Split('.');
+                if (fileNameArr.Length >= 2)
+                {
+                    string extName = fileNameArr[fileNameArr.Length - 1];
+                    if (extName == "PcbDoc" || extName == "SchDoc")
+                    {
+                        previewList.Items.Add(fileName);
+                    }
+                }
+            }
+        }
+
+        private void btnBatch_Click(object sender, EventArgs e)
+        {
+            progressBar1.Value = 0;
+            progressBar1.Maximum = previewList.Items.Count;
+            tabControl1.SelectTab(2);
+            for (int i = 0; i < previewList.Items.Count; i++)
+            {
+                string[] fileNameArr = getFileName(previewList.Items[i].ToString());
+                fileDp.Text = fileNameArr[0] + fileNameArr[1] + "_KiCad";
+                string fullName = fileNameArr[0] + fileNameArr[1] + "." + fileNameArr[2];
+                if (fileNameArr[2] == "PcbDoc")
+                {
+                    fileBp.Text = fullName;
+                    fileCp.Text = "";
+                }
+                else if (fileNameArr[2] == "SchDoc")
+                {
+                    fileBp.Text = "";
+                    fileCp.Text = fullName;
+                }
+                logAdd("批处理任务 " + progressBar1.Value.ToString() + progressBar1.Maximum.ToString() + " : " + fileBp.Text + fileCp.Text + " -> " + fileDp.Text);
+                start();
+            }
         }
     }
 }
